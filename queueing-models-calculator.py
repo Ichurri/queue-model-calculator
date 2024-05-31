@@ -37,7 +37,7 @@ def calcular():
                 return
             sumatoria = sum((lam / mu) ** i / factorial(i) for i in range(k))
             P0 = 1 / (sumatoria + ((lam / mu) ** k / factorial(k)) * (k * mu / (k * mu - lam)))
-            Lq = ((lam / mu) ** k * lam * mu) / (factorial(k) * ((k * mu - lam) ** 2)) * P0
+            Lq = (((lam / mu) ** k) * lam * mu) / (factorial(k - 1) * ((k * mu - lam) ** 2)) * P0
             L = Lq + lam / mu
             Wq = Lq / lam
             W = Wq + 1 / mu
@@ -124,15 +124,14 @@ def calcular():
                 messagebox.showerror("Error", "λ debe ser menor que μ")
                 return
 
-            sumatoria = sum((factorial(N) / (factorial(N - n)) * (lam / mu) ** n) for n in range(N + 1))
+            sumatoria = sum((factorial(N) / factorial(N - n)) * ((lam / mu) ** n) for n in range(N + 1))
             P0 = 1 / sumatoria
-            # Lq = N - (lam / mu) * (1 - P0)
             Lq = N - ((lam + mu) / lam) * (1 - P0)
             L = Lq + (1 - P0)
             Wq = Lq / ((N - L) * lam)
             W = Wq + (1 / mu)
             Pw = 1 - P0
-            Pn = [(factorial(N) / (factorial(N - n)) * (lam / mu) ** n) * P0]
+            Pn = [factorial(N) / (factorial(N - n) * (lam / mu) ** n) * P0 for n in range(N + 1)]
 
             result_P0.config(text=f"P0: {P0:.4f}")
             result_Lq.config(text=f"Lq: {Lq:.4f}")
@@ -141,6 +140,25 @@ def calcular():
             result_W.config(text=f"W: {W:.4f}")
             result_Pw.config(text=f"Pw: {Pw:.4f}")
             result_Pn.config(text=f"Pn: {Pn[-1]:.4f}")
+
+        elif model_var.get() == "M/D/1":
+            if lam >= mu:
+                messagebox.showerror("Error", "λ debe ser menor que μ")
+                return
+            P0 = 1 - (lam / mu)
+            Lq = (lam ** 2) / (2 * mu * (mu - lam))
+            L = Lq + (lam / mu)
+            Wq = Lq / lam
+            W = Wq + (1 / mu)
+            Pw = lam / mu
+
+            result_P0.config(text=f"P0: {P0:.4f}")
+            result_Lq.config(text=f"Lq: {Lq:.4f}")
+            result_L.config(text=f"L: {L:.4f}")
+            result_Wq.config(text=f"Wq: {Wq:.4f}")
+            result_W.config(text=f"W: {W:.4f}")
+            result_Pw.config(text=f"Pw: {Pw:.4f}")
+            result_Pn.config(text="N/A")  # No aplica para M/D/1
 
     except ValueError:
         messagebox.showerror("Error", "Por favor ingrese valores numéricos válidos")
@@ -183,6 +201,15 @@ def toggle_entries():
         entry_k.grid_remove()
         sigma_label.grid_remove()
         entry_sigma.grid_remove()
+    elif model_var.get() == "M/D/1":
+        k_label.grid_remove()
+        entry_k.grid_remove()
+        N_label.grid_remove()
+        entry_N.grid_remove()
+        sigma_label.grid_remove()
+        entry_sigma.grid_remove()
+        entry_n.grid_remove()
+        label_n.grid_remove()
     else:  # M/M/1
         k_label.grid_remove()
         entry_k.grid_remove()
@@ -195,67 +222,87 @@ def toggle_entries():
 
 
 app = tk.Tk()
-app.title("Modelos de Colas")
+app.title("Cálculo de Líneas de Espera")
+app.geometry("800x600")
+
+title_label = tk.Label(app, text="Cálculo de Líneas de Espera", font=("Arial", 24))
+title_label.pack(pady=20)
 
 model_var = tk.StringVar(value="M/M/1")
-tk.Radiobutton(app, text="M/M/1", variable=model_var, value="M/M/1", command=toggle_entries).grid(row=0, column=0)
-tk.Radiobutton(app, text="M/M/k", variable=model_var, value="M/M/k", command=toggle_entries).grid(row=0, column=1)
-tk.Radiobutton(app, text="M/G/1", variable=model_var, value="M/G/1", command=toggle_entries).grid(row=0, column=2)
-tk.Radiobutton(app, text="M/M/k (fuente finita)", variable=model_var, value="M/M/k (fuente finita)",
-               command=toggle_entries).grid(row=0, column=3)
-tk.Radiobutton(app, text="M/M/1 con fuente finita", variable=model_var, value="M/M/1 con fuente finita",
-               command=toggle_entries).grid(row=0, column=4)
+frame = tk.Frame(app)
+frame.pack(pady=10)
 
-tk.Label(app, text="λ (tasa de llegadas)").grid(row=1, column=0)
-entry_lambda = tk.Entry(app)
-entry_lambda.grid(row=1, column=1)
+tk.Radiobutton(frame, text="M/M/1", variable=model_var, value="M/M/1", command=toggle_entries, font=("Arial", 14)).grid(
+    row=0, column=0, padx=5)
+tk.Radiobutton(frame, text="M/M/k", variable=model_var, value="M/M/k", command=toggle_entries, font=("Arial", 14)).grid(
+    row=0, column=1, padx=5)
+tk.Radiobutton(frame, text="M/G/1", variable=model_var, value="M/G/1", command=toggle_entries, font=("Arial", 14)).grid(
+    row=0, column=2, padx=5)
+tk.Radiobutton(frame, text="M/M/k (fuente finita)", variable=model_var, value="M/M/k (fuente finita)",
+               command=toggle_entries, font=("Arial", 14)).grid(row=0, column=3, padx=5)
+tk.Radiobutton(frame, text="M/M/1 con fuente finita", variable=model_var, value="M/M/1 con fuente finita",
+               command=toggle_entries, font=("Arial", 14)).grid(row=0, column=4, padx=5)
+tk.Radiobutton(frame, text="M/D/1", variable=model_var, value="M/D/1", command=toggle_entries, font=("Arial", 14)).grid(
+    row=0, column=5, padx=5)
 
-tk.Label(app, text="μ (tasa de servicios)").grid(row=2, column=0)
-entry_mu = tk.Entry(app)
-entry_mu.grid(row=2, column=1)
+inputs_frame = tk.Frame(app)
+inputs_frame.pack(pady=20)
 
-k_label = tk.Label(app, text="k (número de canales)")
-k_label.grid(row=3, column=0)
-entry_k = tk.Entry(app)
-entry_k.grid(row=3, column=1)
+tk.Label(inputs_frame, text="λ (tasa de llegadas)", font=("Arial", 14)).grid(row=1, column=0, padx=10, pady=5,
+                                                                             sticky="e")
+entry_lambda = tk.Entry(inputs_frame, font=("Arial", 14))
+entry_lambda.grid(row=1, column=1, padx=10, pady=5)
 
-N_label = tk.Label(app, text="N (tamaño de la fuente)")
-N_label.grid(row=4, column=0)
-entry_N = tk.Entry(app)
-entry_N.grid(row=4, column=1)
+tk.Label(inputs_frame, text="μ (tasa de servicios)", font=("Arial", 14)).grid(row=2, column=0, padx=10, pady=5,
+                                                                              sticky="e")
+entry_mu = tk.Entry(inputs_frame, font=("Arial", 14))
+entry_mu.grid(row=2, column=1, padx=10, pady=5)
 
-sigma_label = tk.Label(app, text="σ (desviación estándar)")
-sigma_label.grid(row=5, column=0)
-entry_sigma = tk.Entry(app)
-entry_sigma.grid(row=5, column=1)
+k_label = tk.Label(inputs_frame, text="k (número de canales)", font=("Arial", 14))
+k_label.grid(row=3, column=0, padx=10, pady=5, sticky="e")
+entry_k = tk.Entry(inputs_frame, font=("Arial", 14))
+entry_k.grid(row=3, column=1, padx=10, pady=5)
 
-label_n = tk.Label(app, text="n (número de unidades en el sistema)")
-label_n.grid(row=6, column=0)
-entry_n = tk.Entry(app)
-entry_n.grid(row=6, column=1)
+N_label = tk.Label(inputs_frame, text="N (tamaño de la fuente)", font=("Arial", 14))
+N_label.grid(row=4, column=0, padx=10, pady=5, sticky="e")
+entry_N = tk.Entry(inputs_frame, font=("Arial", 14))
+entry_N.grid(row=4, column=1, padx=10, pady=5)
 
-tk.Button(app, text="Calcular", command=calcular).grid(row=7, column=0, columnspan=2)
+sigma_label = tk.Label(inputs_frame, text="σ (desviación estándar)", font=("Arial", 14))
+sigma_label.grid(row=5, column=0, padx=10, pady=5, sticky="e")
+entry_sigma = tk.Entry(inputs_frame, font=("Arial", 14))
+entry_sigma.grid(row=5, column=1, padx=10, pady=5)
 
-result_P0 = tk.Label(app, text="P0: ")
-result_P0.grid(row=8, column=0, columnspan=2)
+label_n = tk.Label(inputs_frame, text="n (número de unidades en el sistema)", font=("Arial", 14))
+label_n.grid(row=6, column=0, padx=10, pady=5, sticky="e")
+entry_n = tk.Entry(inputs_frame, font=("Arial", 14))
+entry_n.grid(row=6, column=1, padx=10, pady=5)
 
-result_Lq = tk.Label(app, text="Lq: ")
-result_Lq.grid(row=9, column=0, columnspan=2)
+tk.Button(app, text="Calcular", command=calcular, font=("Arial", 14)).pack(pady=20)
 
-result_L = tk.Label(app, text="L: ")
-result_L.grid(row=10, column=0, columnspan=2)
+results_frame = tk.Frame(app)
+results_frame.pack(pady=10)
 
-result_Wq = tk.Label(app, text="Wq: ")
-result_Wq.grid(row=11, column=0, columnspan=2)
+result_P0 = tk.Label(results_frame, text="P0: ", font=("Arial", 14))
+result_P0.grid(row=0, column=0, padx=10, pady=5)
 
-result_W = tk.Label(app, text="W: ")
-result_W.grid(row=12, column=0, columnspan=2)
+result_Lq = tk.Label(results_frame, text="Lq: ", font=("Arial", 14))
+result_Lq.grid(row=1, column=0, padx=10, pady=5)
 
-result_Pw = tk.Label(app, text="Pw: ")
-result_Pw.grid(row=13, column=0, columnspan=2)
+result_L = tk.Label(results_frame, text="L: ", font=("Arial", 14))
+result_L.grid(row=2, column=0, padx=10, pady=5)
 
-result_Pn = tk.Label(app, text="Pn: ")
-result_Pn.grid(row=14, column=0, columnspan=2)
+result_Wq = tk.Label(results_frame, text="Wq: ", font=("Arial", 14))
+result_Wq.grid(row=3, column=0, padx=10, pady=5)
+
+result_W = tk.Label(results_frame, text="W: ", font=("Arial", 14))
+result_W.grid(row=4, column=0, padx=10, pady=5)
+
+result_Pw = tk.Label(results_frame, text="Pw: ", font=("Arial", 14))
+result_Pw.grid(row=5, column=0, padx=10, pady=5)
+
+result_Pn = tk.Label(results_frame, text="Pn: ", font=("Arial", 14))
+result_Pn.grid(row=6, column=0, padx=10, pady=5)
 
 toggle_entries()  # Ensure correct initial state
 
