@@ -222,7 +222,7 @@ def toggle_entries():
 
 
 app = tk.Tk()
-app.title("Cálculo de Líneas de Espera")
+app.title("Investigacion Operativa II : Líneas de Espera")
 app.geometry("800x600")
 
 title_label = tk.Label(app, text="Cálculo de Líneas de Espera", font=("Arial", 24))
